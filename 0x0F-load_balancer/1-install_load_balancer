@@ -1,29 +1,22 @@
 #!/usr/bin/env bash
-# Configure Nginx so that its HTTP response contains
-# a custom header
-#
-balancer="\
-frontend haproxy_balancer
+# Install and configure HAproxy on your lb-01 server
+sudo apt-get update
+sudo apt-get -y upgrade
+sudo apt install software-properties-common
+sudo add-apt-repository -y ppa:vbernat/haproxy-2.9
+sudo apt install -y haproxy
+new_config="
+frontend haproxy-main
     bind *:80
-    mode http
-    default_backend webservers
-    
-backend webservers
+    option forwardfor
+    default_backend apache_webservers
+
+backend apache_webservers
     balance roundrobin
-    server 525779-web-01 34.229.66.172:80 check
-    server 525779-web-02 54.82.132.21:80 check
+    server 525779-web-01        34.229.66.172:80 check
+    server 525779-web-02        54.82.132.21:80 check
 "
-# Update packages
-apt-get -y update
-apt-get -y upgrade
-
-# Add HAProxy PPA
-apt-get -y install software-properties-common
-add-apt-repository -y ppa:vbernat/haproxy-2.5
-apt-get -y update
-
-# Install HAProxy
-apt-get -y install haproxy
-cp -a /etc/haproxy/haproxy.cfg{,.orig}
-echo "$balancer" >> /etc/haproxy/haproxy.cfg
-service haproxy restart
+config_file="/etc/haproxy/haproxy.cfg"
+echo -e "$new_config" | sudo tee -a "$config_file" >> /dev/null
+sudo service haproxy restart
+sudo systemctl enable haproxy
