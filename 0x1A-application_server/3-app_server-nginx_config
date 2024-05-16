@@ -1,22 +1,25 @@
-# Add a route with query parameters
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    # Listen on port 80
+    listen      80 default_server;
+    listen      [::]:80 default_server ipv6only=on;
 
+    # Use server IP as domain name
     server_name 34.229.66.172;
-    add_header X-Server-By 525779-web-01;
 
-    root /var/www/html;
-    index index.html index.html;
+    # Customize HTTP response header
+    add_header  X-Served-By 525779-web-01;
 
+    # Serve /airbnb-onepage/ route on AirBnB_clone_v2
     location = /airbnb-onepage/ {
         proxy_pass http://127.0.0.1:5000/airbnb-onepage/;
     }
 
+    # Serve /number_odd_or_even/ route on AirBnB_clone_v2
     location ~ /airbnb-dynamic/number_odd_or_even/(\d+)$ {
         proxy_pass http://127.0.0.1:5001/number_odd_or_even/$1;
     }
 
+    # 404 error page
     error_page 404 /404.html;
     location /404 {
         root /var/www/html;
